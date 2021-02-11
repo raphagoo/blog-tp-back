@@ -3,7 +3,7 @@
 
 namespace App\BL;
 
-
+use Exception;
 use App\Entity\Article;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -125,5 +125,37 @@ class ArticleManager
     {
         $this->em->remove($article);
         $this->em->flush();
+    }
+
+    /**
+     * Transform the base64 data and stores it as a file on the server
+     * @param $uploadApiModel
+     * @return string
+     * @throws Exception
+     */
+    public function saveImageFile($uploadApiModel): string
+    {
+
+        if (preg_match('/^data:image\/(\w+);base64,/', $uploadApiModel->data, $type)) {
+            $data = substr($uploadApiModel->data, strpos($uploadApiModel->data, ',') + 1);
+            $type = strtolower($type[1]); // jpg, png, gif
+
+            if (!in_array($type, [ 'jpg', 'jpeg', 'gif', 'png' ])) {
+                throw new Exception('invalid image type');
+            }
+            $data = str_replace( ' ', '+', $data );
+            $data = base64_decode($data);
+
+            if ($data === false) {
+                throw new Exception('base64_decode failed');
+            }
+        } else {
+            throw new Exception('did not match data URI with image data');
+        }
+
+        $fileName = "img-" . uniqid() . ".{$type}";
+
+        file_put_contents("./uploads/images/${fileName}", $data);
+        return $fileName;
     }
 }

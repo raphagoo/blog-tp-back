@@ -49,3 +49,4 @@ class UserManager
         $this->em->flush();
     }
 }
+

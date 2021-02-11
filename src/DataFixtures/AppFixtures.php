@@ -75,10 +75,10 @@ class AppFixtures extends Fixture
             $manager->flush();
         }
 
-        // create 20 articles! Bam!
+        // create 5 articles! Bam!
         $nbExisting = count($manager->getRepository(Article::class)->findAll());
 
-        for ($i = $nbExisting; $i < $nbExisting + 20; $i++) {
+        for ($i = $nbExisting; $i < $nbExisting + 5; $i++) {
             $article = new Article();
             $article->setTitle('Article '.$i);
             $article->setSubtitle('Subtitle' .$i);

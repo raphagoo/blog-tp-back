@@ -21,7 +21,7 @@ class SerializerHelper
      * @param $groups string|array
      * @return Response
      */
-    public function prepareResponse($toSerialize, $groups, $base64 = null): Response
+    public function prepareResponse($toSerialize, $groups): Response
     {
         $jsonContent = $this->serializer->serialize($toSerialize, 'json', [
             'circular_reference_handler' => function($object){
@@ -29,9 +29,6 @@ class SerializerHelper
             },
             'groups' => $groups
         ]);
-
-        dd($jsonContent);
-
         $response = new Response($jsonContent);
 
         $response->headers->set('Content-type', 'application/json');

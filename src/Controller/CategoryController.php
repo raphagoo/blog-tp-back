@@ -4,13 +4,10 @@ namespace App\Controller;
 
 use App\Entity\Category;
 use App\Helpers\SerializerHelper;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\BL\CategoryManager;
-use App\Form\CategoryFormType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -20,6 +17,11 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class CategoryController extends AbstractController
 {
+    /**
+     * @var EntityManagerInterface
+     */
+    private EntityManagerInterface $em;
+
     /**
      * CategoryController constructor.
      * @param EntityManagerInterface $em
@@ -34,7 +36,7 @@ class CategoryController extends AbstractController
     /**
      * @var CategoryManager
      */
-    private $categoryManager;
+    private CategoryManager $categoryManager;
 
     /**
      * @Route("/category", name="category")
@@ -49,59 +51,19 @@ class CategoryController extends AbstractController
     }
 
     /**
-     * @IsGranted("ROLE_ADMIN")
-     * @Route("category/add", name="addCategory")
+     * @Route("/category", name="addCategory", methods={"POST"})
      * @param Request $request
+     * @param SerializerHelper $serializerHelper
+     * @param CategoryManager $categoryManager
      * @return Response
      */
-    public function addCategory(Request $request)
+    public function addCategory(Request $request, SerializerHelper $serializerHelper, CategoryManager $categoryManager): Response
     {
-
+        $json = $request->getContent();
         $category = new Category();
-        $form = $this->createForm(CategoryFormType::class, $category);
-        $form->handleRequest($request);
-        if ($form->isSubmitted() && $form->isValid()) {
-
-            $this->categoryManager->GetInscriptionData($category);
-            return $this->redirectToRoute('category');
-        }
-        return $this->render('category/categoryAdd.html.twig', [
-            'form' => $form->createView()
-        ]);
+        $category = $serializerHelper->deserializeRequest($json, Category::class, $category);
+        $categoryManager->GetInscriptionData($category);
+        return $this->json('', 201, []);
     }
 
-    /**
-     * @IsGranted("ROLE_ADMIN")
-     * @Route("category/edit/{idCategory}", name="editCategory")
-     * @param $idCategory
-     * @param Request $request
-     * @return RedirectResponse|Response
-     */
-    public function getModifyCategory($idCategory, Request $request)
-    {
-        $category = $this->categoryManager->getCategoryById($idCategory);
-        $form = $this->createForm(CategoryFormType::class, $category);
-        $form->handleRequest($request);
-        if ($form->isSubmitted() && $form->isValid()) {
-
-            $this->categoryManager->GetInscriptionData($category);
-            return $this->redirectToRoute('category');
-        }
-        return $this->render('category/categoryEdit.html.twig', [
-            'form' => $form->createView()
-        ]);
-    }
-
-    /**
-     * @IsGranted("ROLE_ADMIN")
-     * @Route("category/delete/{idCategory}",name="deleteCategory")
-     * @param $idCategory
-     * @return RedirectResponse|Response
-     */
-    public function deleteCategory($idCategory)
-    {
-        $category = $this->categoryManager->getCategoryById($idCategory);
-        $this->categoryManager->deleteCategory($category);
-        return $this->redirectToRoute('category');
-    }
 }
